@@ -46,7 +46,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-green-100 text-sm font-medium">Total Pemasukan</p>
-                        <p class="text-2xl font-bold">{{ number_format($income ?? 8000000, 0, ',', '.') }}</p>
+                        <p class="text-2xl font-bold">{{ number_format($income ?? 0, 0, ',', '.') }}</p>
                     </div>
                     <div class="bg-opacity-20 p-3 rounded-lg">
                         <i class="fas fa-arrow-up text-2xl"></i>
@@ -59,7 +59,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-red-100 text-sm font-medium">Total Pengeluaran</p>
-                        <p class="text-2xl font-bold">{{ number_format($outcome ?? 3000000, 0, ',', '.') }}</p>
+                        <p class="text-2xl font-bold">{{ number_format($outcome ?? 0, 0, ',', '.') }}</p>
                     </div>
                     <div class="bg-opacity-20 p-3 rounded-lg">
                         <i class="fas fa-arrow-down text-2xl"></i>

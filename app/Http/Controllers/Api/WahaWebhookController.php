@@ -25,7 +25,6 @@ class WahaWebhookController extends Controller
             $today = now()->format('Y-m-d H:i:s');
             Helper::balasPesanUser($nomorUser, "Sabar Ya Sedang di proses 😊");
             $result = $this->askGemini($pesanUser, $today, $nomorUser);
-            LOG::info($result->text());
             return $this->processAIResponse($result, $nomorUser, $today);
         } catch (Exception $e) {
             Log::error('WahaWebhookController Error: ' . $e->getMessage(), ['exception' => $e]);
@@ -235,7 +234,6 @@ class WahaWebhookController extends Controller
         - Struktur dengan heading yang jelas
         - Highlight angka penting dengan **bold**
         - Gunakan bullet points untuk poin-poin penting
-        - Akhiri dengan call-to-action
 
         ### 6. Tone & Style
         - Bahasa Indonesia yang santai tapi profesional
