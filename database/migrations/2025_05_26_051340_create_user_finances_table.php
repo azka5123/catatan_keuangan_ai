@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('user_finances', function (Blueprint $table) {
             $table->id();
-            $table->dateTime('tanggal');
+            $table->date('tanggal');
             $table->string('keterangan'); // Contoh: "makan", "freelance"
             $table->text('deskripsi')->nullable(); // Bisa dikosongkan jika tidak detail
             $table->integer('nominal');

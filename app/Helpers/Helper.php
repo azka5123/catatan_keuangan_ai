@@ -16,7 +16,7 @@ class Helper
         return Str::limit($message, $limit);
     }
 
-    static function balasPesanUser($nomorUser, $pesan,$session = 'default')
+    static function balasPesanUser($nomorUser, $pesan, $session = 'default')
     {
         $apiWa = env('API_WA');
         $payload = [
@@ -33,8 +33,30 @@ class Helper
                 'response' => $response->body(),
                 'payload' => $payload,
             ]);
-        }else{
+        } else {
             LOG::info('Success to send WhatsApp message');
+        }
+    }
+
+    public static function saveImage($image, $name, $path = '')
+    {
+        if ($image == null) {
+            return null;
+        }
+        $extension = $image->getClientOriginalExtension();
+        $filename = $name . '.' . $extension;
+        $path = public_path('dist/img/' . $path);
+        $image->move($path, $filename);
+        return $filename;
+    }
+
+    public static function deleteImage($filename, $path = '')
+    {
+        $path = public_path('dist/assets/img/' . $path);
+        if (file_exists($path . $filename)) {
+            unlink($path . $filename);
+        } else {
+            // return false;
         }
     }
 }
