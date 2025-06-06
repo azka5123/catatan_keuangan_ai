@@ -28,8 +28,9 @@ class WahaWebhookController extends Controller
             Helper::balasPesanUser($nomorUser, "Sabar Ya Sedang di proses 😊");
             $result = $this->askGemini($pesanUser, $today, $nomorUser);
             $result = $this->processAIResponse($result, $nomorUser, $today);
-            $chatLogs = $this->chatLogs($nomorUser, $pesanUser, $result);
-            return ChatLogs::insert($chatLogs);
+            $chatLogs = $this->chatLogs($nomorUser, $pesanUser, $result->text());
+            ChatLogs::insert($chatLogs);
+            return true;
             // }
         } catch (Exception $e) {
             Log::error('WahaWebhookController Error: ' . $e->getMessage(), ['exception' => $e]);
@@ -56,6 +57,9 @@ class WahaWebhookController extends Controller
 
     private function askGemini(string $pesanUser, string $today, string $nomorUser)
     {
+        $chatLogs = ChatLogs::where('nomor_user', $nomorUser)->orderBy('id', 'desc')
+            ->limit(5)
+            ->get();
         $prompt = <<<PROMPT
         Kamu adalah asisten AI keuangan pribadi yang cerdas dan akurat. Tugasmu adalah membantu mencatat transaksi keuangan ke database,
         dan memberikan informasi keuangan saat diminta, dan menjawab pertanyaan keuangan.
@@ -162,6 +166,9 @@ class WahaWebhookController extends Controller
 
         Untuk pertanyaan di luar topik keuangan, maaf saya tidak bisa membantu. Saya fokus khusus pada manajemen keuangan Anda! 💰
 
+        sebagai referensi ini adalah chat lama user:
+        $chatLogs;
+
         Berikut isi pesan dari user:
         $pesanUser
         PROMPT;
@@ -190,6 +197,7 @@ class WahaWebhookController extends Controller
         }
 
         Helper::balasPesanUser($nomorUser, $result->text());
+        return $result;
     }
 
     private function handleDataQuery(array $dataArray, string $nomorUser)
@@ -259,7 +267,7 @@ class WahaWebhookController extends Controller
         $result2 = Gemini::generativeModel(model: 'gemini-2.0-flash')->generateContent($prompt2);
         Helper::balasPesanUser($nomorUser, $result2->text());
 
-        return response()->json(['status' => 'ok']);
+        return $result2;;
     }
 
     private function handleDataInsert(array $dataArray, string $nomorUser)
