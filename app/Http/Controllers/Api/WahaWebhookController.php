@@ -192,8 +192,9 @@ class WahaWebhookController extends Controller
             }
 
             if (isset($dataArray['action']) && $dataArray['action'] === 'get_data') {
-                $this->handleDataQuery($dataArray, $nomorUser);
-                return Helper::balasPesanUser($nomorUser, "Untuk lebih detail silahkan kunjungi website kami yah.");
+                $result = $this->handleDataQuery($dataArray, $nomorUser);
+                Helper::balasPesanUser($nomorUser, "Untuk lebih detail silahkan kunjungi website kami yah.");
+                return $result;
             } elseif (isset($dataArray[0]['deskripsi']) || isset($dataArray['deskripsi'])) {
                 return $this->handleDataInsert($dataArray, $nomorUser);
             }
