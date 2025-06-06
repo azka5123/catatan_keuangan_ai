@@ -28,7 +28,7 @@ class WahaWebhookController extends Controller
             Helper::balasPesanUser($nomorUser, "Sabar Ya Sedang di proses 😊");
             $result = $this->askGemini($pesanUser, $today, $nomorUser);
             $result = $this->processAIResponse($result, $nomorUser, $today);
-            $chatLogs = $this->chatLogs($nomorUser, $pesanUser, $result->text());
+            $chatLogs = $this->chatLogs($nomorUser, $pesanUser, $result);
             ChatLogs::create($chatLogs);
             return response()->json([
                 'success' => true,
@@ -200,7 +200,7 @@ class WahaWebhookController extends Controller
         }
 
         Helper::balasPesanUser($nomorUser, $result->text());
-        return $result;
+        return $result->text();
     }
 
     private function handleDataQuery(array $dataArray, string $nomorUser)
@@ -270,13 +270,13 @@ class WahaWebhookController extends Controller
         $result2 = Gemini::generativeModel(model: 'gemini-2.0-flash')->generateContent($prompt2);
         Helper::balasPesanUser($nomorUser, $result2->text());
 
-        return $result2;;
+        return $result2->text();
     }
 
     private function handleDataInsert(array $dataArray, string $nomorUser)
     {
         UserFinaces::insert($dataArray);
-        LOG::info('asd');
-        return Helper::balasPesanUser($nomorUser, '✅ Data keuangan kamu berhasil dicatat.');
+        Helper::balasPesanUser($nomorUser, '✅ Data keuangan kamu berhasil dicatat.');
+        return 'insert data';
     }
 }
