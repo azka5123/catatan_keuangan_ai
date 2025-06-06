@@ -29,8 +29,11 @@ class WahaWebhookController extends Controller
             $result = $this->askGemini($pesanUser, $today, $nomorUser);
             $result = $this->processAIResponse($result, $nomorUser, $today);
             $chatLogs = $this->chatLogs($nomorUser, $pesanUser, $result->text());
-            ChatLogs::insert($chatLogs);
-            return true;
+            ChatLogs::create($chatLogs);
+            return response()->json([
+                'success' => true,
+                'message' => 'Pesan berhasil diproses',
+            ]);
             // }
         } catch (Exception $e) {
             Log::error('WahaWebhookController Error: ' . $e->getMessage(), ['exception' => $e]);
