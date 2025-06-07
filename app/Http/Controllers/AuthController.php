@@ -20,14 +20,18 @@ class AuthController extends Controller
     {
         try {
             $validated = $request->validate([
-                'no_hp' => 'required|numeric|digits_between:10,15',
+                'no_hp' => 'required|string|min:10',
             ]);
             $noHp = $validated['no_hp'];
             $cleanNoHp = Str::startsWith($noHp, '0') ? '62' . substr($noHp, 1) : $noHp;
 
-            if($request->type == 'update'){
+            if (!str_ends_with($cleanNoHp, '@c.us')) {
+                $cleanNoHp .= '@c.us';
+            }
+
+            if ($request->type == 'update') {
                 $cekNoHp = User::where('no_hp', $cleanNoHp)->first();
-            }else{
+            } else {
                 $cekNoHp = User::firstOrCreate(['no_hp' => $cleanNoHp]);
             }
 
@@ -72,10 +76,14 @@ class AuthController extends Controller
         try {
             $validated = $request->validate([
                 'otp' => 'required|numeric|digits:6',
-                'no_hp' => 'required|numeric|digits_between:10,15',
+                'no_hp' => 'required|string|min:10',
             ]);
             $noHp = $validated['no_hp'];
             $otp = $validated['otp'];
+
+            if (!str_ends_with($noHp, '@c.us')) {
+                $noHp .= '@c.us';
+            }
 
             $cekOtp = User::where('no_hp', $noHp)->where('otp', $otp)->where('expired', '>', now())->first();
             if (!$cekOtp) {
@@ -86,6 +94,8 @@ class AuthController extends Controller
             }
 
             Auth::login($cekOtp);
+
+            $cekOtp->update([ 'otp' => null, 'expired' => null ]);
 
             return response()->json([
                 'message' => 'OTP valid',
