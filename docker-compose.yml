@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ./docker/php
+    container_name: laravel_app
+    working_dir: /var/www/html
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./:/var/www/html
+    command: >
+        sh -c "
+            composer install &&
+            php artisan config:clear &&
+            php artisan cache:clear &&
+            [ -f .env ] || cp .env.example .env &&
+            php -r \"file_exists('.env') && strpos(file_get_contents('.env'), 'APP_KEY=') !== false && strpos(file_get_contents('.env'), 'APP_KEY=base64') === false ? passthru('php artisan key:generate') : null;\" &&
+            [ -d node_modules ] || npm install &&
+            npm run build &&
+            php artisan serve --host=0.0.0.0 --port=8000
+        "
+
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    container_name: redis_server
+    ports:
+      - "5123:6379"
