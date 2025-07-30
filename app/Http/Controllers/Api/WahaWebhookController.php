@@ -25,7 +25,7 @@ class WahaWebhookController extends Controller
             $pesanUser = Helper::sanitasiPesanUser($validate['payload']['body'], 1000);
             $this->nomorUser = $validate['payload']['from'];
             $this->participant = $validate['payload']['participant'] ?? null;
-            $this->replyTo = $validate['payload']['id'];
+            $this->replyTo = $validate['payload']['id'] ?? '';
 
             $today = now()->format('Y-m-d H:i:s');
             $isGroup = Str::endsWith($this->nomorUser, '@g.us');
