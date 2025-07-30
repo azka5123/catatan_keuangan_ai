@@ -34,7 +34,9 @@ class Helper
             "linkPreviewHighQuality" => false,
             "session" => $session
         ];
-        $response = Http::post($apiWa . '/sendText', $payload);
+        $response = Http::withHeaders([
+            'X-Api-Key' => env('API_WA_KEY')
+        ])->post($apiWa . '/sendText', $payload);
         if ($response->failed()) {
             Log::error('Failed to send WhatsApp message', [
                 'response' => $response->body(),
