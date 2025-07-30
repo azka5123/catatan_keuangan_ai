@@ -126,4 +126,35 @@ class Helper
         $chatKey = "chat_history:{$nomorUser}";
         return Redis::del($chatKey) > 0;
     }
+
+    static function balasPesanUserTelegram($chatIdTelegram, $pesan,$extraParams)
+    {
+        $telegramToken = env('TELEGRAM_BOT_TOKEN');
+        $telegramApiUrl = "https://api.telegram.org/bot{$telegramToken}/sendMessage";
+
+        $pesan = preg_replace('/```json\s*.*?\s*```/is', '', $pesan);
+
+        $payload = [
+            'chat_id' => $chatIdTelegram,
+            'text' => $pesan,
+            'parse_mode' => 'HTML',
+        ];
+
+        if($extraParams){
+            $payload = array_merge($payload, $extraParams);
+        }
+
+        $response = Http::post($telegramApiUrl, $payload);
+
+        if ($response->failed()) {
+            Log::error('Failed to send Telegram message', [
+                'response' => $response->body(),
+                'payload' => $payload,
+            ]);
+        } else {
+            Log::info('Success to send Telegram message', [
+                'payload' => $payload
+            ]);
+        }
+    }
 }

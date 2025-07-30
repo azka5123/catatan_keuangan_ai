@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\UserFinaces;
 use Exception;
 
@@ -21,29 +22,41 @@ class WahaWebhookController extends Controller
     {
         try {
             $validate = $this->validateRequest($request);
+            $idTelegram = $validate['message']['from']['id'];
+            $nomorUser = User::select('no_hp')->where('client_id_telegram', $idTelegram)->first();
+            if (!$nomorUser) {
+                return Helper::balasPesanUserTelegram($idTelegram, 'Klik tombol di bawah untuk mengirim nomor HP kamu:', $this->newUser());
+            }
+            $pesanUser = Helper::sanitasiPesanUser($validate['message']['text'], 1000);
+            $this->nomorUser = $nomorUser->no_hp;
 
-            $pesanUser = Helper::sanitasiPesanUser($validate['payload']['body'], 1000);
-            $this->nomorUser = $validate['payload']['from'];
-            $this->participant = $validate['payload']['participant'] ?? null;
-            $this->replyTo = $validate['payload']['id'];
+            $this->participant = $validate['payload']['participant'] ?? null; //punya wa
+            $this->replyTo = $validate['payload']['id']; //punya wa
 
             $today = now()->format('Y-m-d H:i:s');
-            $isGroup = Str::endsWith($this->nomorUser, '@g.us');
-            $nomorPengirim = $isGroup ? ($this->participant ?? '') : $this->nomorUser;
+            ####fungsi waha
+            // $isGroup = Str::endsWith($this->nomorUser, '@g.us');
+            // $nomorPengirim = $isGroup ? ($this->participant ?? '') : $this->nomorUser;
+            // if ($isGroup) {
+            //     if (Str::startsWith($pesanUser, '#uang')) {
+            //         Helper::balasPesanUser($this->nomorUser, "Sabar Ya Sedang di proses 😊", $this->replyTo);
+            //         $result = $this->askGemini($pesanUser, $today, $this->nomorUser, $this->participant ?? '');
+            //         $result = $this->processAIResponse($result, $this->nomorUser, $today, $this->participant ?? '');
+            //         Helper::storeChatLog($nomorPengirim, $pesanUser, $result);
+            //     }
+            // } else {
+            //     Helper::balasPesanUser($this->nomorUser, "Sabar Ya Sedang di proses 😊", $this->replyTo);
+            //     $result = $this->askGemini($pesanUser, $today, $this->nomorUser, '');
+            //     $result = $this->processAIResponse($result, $this->nomorUser, $today, '');
+            //     Helper::storeChatLog($this->nomorUser, $pesanUser, $result);
+            // }
+            ####fungsi waha
 
-            if ($isGroup) {
-                if (Str::startsWith($pesanUser, '#uang')) {
-                    Helper::balasPesanUser($this->nomorUser, "Sabar Ya Sedang di proses 😊", $this->replyTo);
-                    $result = $this->askGemini($pesanUser, $today, $this->nomorUser, $this->participant ?? '');
-                    $result = $this->processAIResponse($result, $this->nomorUser, $today, $this->participant ?? '');
-                    Helper::storeChatLog($nomorPengirim, $pesanUser, $result);
-                }
-            } else {
-                Helper::balasPesanUser($this->nomorUser, "Sabar Ya Sedang di proses 😊", $this->replyTo);
-                $result = $this->askGemini($pesanUser, $today, $this->nomorUser, '');
-                $result = $this->processAIResponse($result, $this->nomorUser, $today, '');
-                Helper::storeChatLog($this->nomorUser, $pesanUser, $result);
-            }
+            die;
+            Helper::balasPesanUser($this->nomorUser, "Sabar Ya Sedang di proses 😊", $this->replyTo);
+            $result = $this->askGemini($pesanUser, $today, $this->nomorUser, '');
+            $result = $this->processAIResponse($result, $this->nomorUser, $today, '');
+            Helper::storeChatLog($this->nomorUser, $pesanUser, $result);
 
             return response()->json([
                 'success' => true,
@@ -55,11 +68,30 @@ class WahaWebhookController extends Controller
         }
     }
 
+    private function newUser()
+    {
+        return $data = [
+            'reply_markup' => json_encode([
+                'keyboard' => [
+                    [
+                        [
+                            'text' => 'Bagikan Kontak Saya',
+                            'request_contact' => true
+                        ]
+                    ]
+                ],
+                'resize_keyboard' => true,
+                'one_time_keyboard' => true
+            ])
+        ];
+    }
+
     private function validateRequest(Request $request)
     {
+        Log::info("message: " . json_encode($request->all()));
         return $request->validate([
-            'payload.body' => 'required|string',
-            'payload.from' => 'required|string|min:10',
+            'message.text' => 'required',
+            'message.from.id' => 'required',
             'payload.participant' => 'sometimes|string',
             'payload.id' => 'sometimes|string',
         ]);
@@ -203,7 +235,7 @@ class WahaWebhookController extends Controller
                 // Helper::balasPesanUser($nomorUser, "Untuk lebih detail silahkan kunjungi website kami yah.");
                 return $result;
             } elseif (isset($dataArray[0]['deskripsi']) || isset($dataArray['deskripsi'])) {
-                return $this->handleDataInsert($dataArray,$nomorUser);
+                return $this->handleDataInsert($dataArray, $nomorUser);
             }
         }
 
