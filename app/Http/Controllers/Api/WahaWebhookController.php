@@ -213,10 +213,12 @@ class WahaWebhookController extends Controller
     private function handleDataQuery(array $dataArray, string $nomorUser, $participant)
     {
         [$startDate, $endDate] = explode(' @+ ', $dataArray['tanggal']);
+        $noHp = !empty(trim($participant)) ? $participant : $nomorUser;
+
         if ($startDate == $endDate) {
-            $query = UserFinaces::where('no_hp', $participant ?? $nomorUser)->whereDate('tanggal', $startDate);
+            $query = UserFinaces::where('no_hp', $noHp)->whereDate('tanggal', $startDate);
         } else {
-            $query = UserFinaces::where('no_hp', $participant ?? $nomorUser)
+            $query = UserFinaces::where('no_hp', $noHp)
                 ->whereBetween('tanggal', [$startDate, $endDate]);
         }
 
