@@ -30,7 +30,6 @@ class WahaWebhookController extends Controller
             $today = now()->format('Y-m-d H:i:s');
             $isGroup = Str::endsWith($this->nomorUser, '@g.us');
             $nomorPengirim = $isGroup ? ($this->participant ?? '') : $this->nomorUser;
-            Log::info('WahaWebhookController', ['pesanUser' => $pesanUser, 'nomorPengirim' => $nomorPengirim,'test'=>$this->nomorUser]);
             if ($isGroup) {
                 if (Str::startsWith($pesanUser, '#uang')) {
                     Helper::balasPesanUser($this->nomorUser, "Sabar Ya Sedang di proses 😊", $this->replyTo);
@@ -199,8 +198,8 @@ class WahaWebhookController extends Controller
             }
 
             if (isset($dataArray['action']) && $dataArray['action'] === 'get_data') {
-                return $result = $this->handleDataQuery($dataArray, $nomorUser, $participant);
-                // Helper::balasPesanUser($nomorUser, "Untuk lebih detail silahkan kunjungi website kami yah.");
+                $result = $this->handleDataQuery($dataArray, $nomorUser, $participant);
+                Helper::balasPesanUser($nomorUser, "Untuk lebih detail silahkan kunjungi website kami yah. di http://100.122.162.45:8000");
                 return $result;
             } elseif (isset($dataArray[0]['deskripsi']) || isset($dataArray['deskripsi'])) {
                 return $this->handleDataInsert($dataArray,$nomorUser);
@@ -284,8 +283,10 @@ class WahaWebhookController extends Controller
 
     private function handleDataInsert(array $dataArray, string $nomorUser)
     {
+        if(empty($dataArray['no_hp'])){
+            $dataArray['no_hp'] = $nomorUser;
+        }
         UserFinaces::insert($dataArray);
-        Log::info('handleDataInsert', ['data' => $dataArray,'nomorUser' => $nomorUser]);
         Helper::balasPesanUser($nomorUser, '✅ Data keuangan kamu berhasil dicatat.', $this->replyTo);
         return 'insert data';
     }
