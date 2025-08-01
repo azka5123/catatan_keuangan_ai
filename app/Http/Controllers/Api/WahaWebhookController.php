@@ -10,6 +10,7 @@ use Exception;
 use Gemini\Laravel\Facades\Gemini;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -182,7 +183,7 @@ class WahaWebhookController extends Controller
         $pesanUser
         PROMPT;
 
-        return Gemini::generativeModel(model: 'gemini-2.0-flash')->generateContent($prompt);
+        return Gemini::generativeModel(model: 'gemini-2.5-pro')->generateContent($prompt);
     }
 
 
@@ -202,7 +203,7 @@ class WahaWebhookController extends Controller
                 Helper::balasPesanUser($nomorUser, "📌 Info selengkapnya bisa kamu cek langsung di website kami ya: https://catatankeuangan.site 😉");
                 return $result;
             } elseif (isset($dataArray[0]['deskripsi']) || isset($dataArray['deskripsi'])) {
-                return $this->handleDataInsert($dataArray,$nomorUser);
+                return $this->handleDataInsert($dataArray, $nomorUser);
             }
         }
 
@@ -277,7 +278,7 @@ class WahaWebhookController extends Controller
             [dst...]
             PROMPT2;
 
-        $result2 = Gemini::generativeModel(model: 'gemini-2.0-flash')->generateContent($prompt2);
+        $result2 = Gemini::generativeModel(model: 'gemini-2.5-pro')->generateContent($prompt2);
         Helper::balasPesanUser($nomorUser, $result2->text(), $this->replyTo);
 
         return $result2->text();
@@ -285,10 +286,21 @@ class WahaWebhookController extends Controller
 
     private function handleDataInsert(array $dataArray, string $nomorUser)
     {
-        if(empty($dataArray['no_hp'])){
-            $dataArray['no_hp'] = $nomorUser;
+        $isSingleRow = Arr::isAssoc($dataArray);
+
+        if ($isSingleRow) {
+            if (empty($dataArray['no_hp'])) {
+                $dataArray['no_hp'] = $nomorUser;
+            }
+            UserFinaces::insert($dataArray);
+        } else {
+            foreach ($dataArray as &$row) {
+                if (empty($row['no_hp'])) {
+                    $row['no_hp'] = $nomorUser;
+                }
+            }
+            UserFinaces::insert($dataArray);
         }
-        UserFinaces::insert($dataArray);
         Helper::balasPesanUser($nomorUser, '✅ Data keuangan kamu berhasil dicatat.', $this->replyTo);
         return 'insert data';
     }
