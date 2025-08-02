@@ -228,55 +228,57 @@ class WahaWebhookController extends Controller
         }
 
         $data = $query->get(['tanggal', 'keterangan', 'deskripsi', 'nominal', 'jenis']);
-        // Log::info('handleDataQuery', ['data' => $dataArray,'nomorUser' => $nomorUser]);
+        // Log::info('handleDataQuery', ['data' => $dataArray, 'nomorUser' => $nomorUser]);
         $jsonData = $data->toJson();
         if ($data->isEmpty()) {
             return Helper::balasPesanUser($nomorUser, 'Maaf, data tidak ditemukan.', $this->replyTo);
         }
         $prompt2 = <<<PROMPT2
-            Kamu adalah asisten AI keuangan pribadi yang ahli dan berpengalaman. Tugasmu adalah menganalisis data keuangan pengguna dan memberikan insight yang actionable dengan cara yang mudah dimengerti.
+            Kamu adalah asisten AI keuangan pribadi. Tugasmu adalah menganalisis data transaksi keuangan pengguna dan membuat laporan WhatsApp yang singkat, rapi, dan mudah dimengerti.
 
-            ## Data Input:
-            - Data transaksi: $jsonData
-            - Periode analisis: $startDate sampai $endDate
-            - Mata uang: (default IDR)
+            ### Data Input
+            - Transaksi: $jsonData
+            - Periode: $startDate – $endDate
+            - Mata uang: IDR
 
-            ## Instruksi Analisis:
+            ### Tujuan
+            Buat laporan keuangan **yang siap dikirim via WhatsApp** dalam dua format:
+            1. Ringkasan analitik (pemasukan, pengeluaran, insight)
+            2. Format catatan transaksi harian (jika data mendukung)
 
-            ### 1. Analisis Dasar
-            - **Total Pemasukan vs Pengeluaran**: Hitung dengan akurat dan tampilkan selisihnya
-            - **Kategorisasi**: Kelompokkan berdasarkan kategori dan urutkan dari yang terbesar
-            - **Trend Harian/Mingguan**: Identifikasi pola pengeluaran berdasarkan rentang waktu
+            ### Gaya
+            - Bahasa Indonesia santai & profesional
+            - Gunakan emoji (💰📊📈📉✅⚠️)
+            - Format WhatsApp-friendly (bold, bullet point, per baris singkat)
+            - Tone disesuaikan (surplus = apresiasi, defisit = suportif)
 
-            ### 2. Insight Mendalam
-            - **Rasio Pengeluaran**: Persentase setiap kategori terhadap total pengeluaran
-            - **Rata-rata Harian**: Pengeluaran rata-rata per hari dalam periode tersebut
-            - **Transaksi Terbesar**: 3-5 pengeluaran terbesar yang perlu diperhatikan
-            - **Pola Waktu**: Analisis kapan pengguna paling banyak mengeluarkan uang
+            ### Format output(kamu hanya perlu mengeluarkan format ini):
+            📊 Laporan Keuangan Harian
+            🗓️ $startDate
 
-            ### 3. Format Output
-            - Gunakan emoji yang relevan untuk visual appeal 💰📊💡
-            - Struktur dengan heading yang jelas
-            - Highlight angka penting dengan **bold**
-            - Gunakan bullet points untuk poin-poin penting
+            Pemasukan:
+            ➕ [Nama]: Rp xxx
+            ...
+            Total: Rp xxx
 
-            ### 4. Tone & Style
-            - Bahasa Indonesia yang santai tapi profesional
-            - Hindari jargon keuangan yang rumit
-            - Berikan motivasi positif, bukan menghakimi
-            - Sesuaikan tone dengan kondisi keuangan (surplus = apresiasi, defisit = supportive)
+            Pengeluaran:
+            ➖ [Nama]: Rp xxx
+            ...
+            Total: Rp xxx
 
-            ## Template Response:
+            📌 Total pemasukan atau pengeluaran $startDate: Rp xxx
 
-            📊 Laporan Keuangan [Periode]
-            💰 Ringkasan Keuangan
+            ### Bagian ini diberikan paling akhir
+            📈 **Insight Penting:**
+            - 📌 Pengeluaran harian rata-rata: Rp xxx
+            - 💡 Rasio terbesar: xx% – [kategori]
+            - 🏆 Transaksi terbesar: [nama/kategori] - Rp xxx
+            - ⏰ Waktu paling boros: [Hari/jam]
 
-            Total Pemasukan: Rp xxx
-            Total Pengeluaran: Rp xxx
-            Selisih: [Surplus/Defisit] Rp xxx
+            ✅ *Tips*: Keren! Tetap pertahankan surplus kamu 😎
+            ⚠️ *Catatan*: Jika defisit, beri saran ringan
 
-            [dst...]
-            PROMPT2;
+        PROMPT2;
 
         $result2 = Gemini::generativeModel(model: 'gemini-2.5-pro')->generateContent($prompt2);
         Helper::balasPesanUser($nomorUser, $result2->text(), $this->replyTo);
