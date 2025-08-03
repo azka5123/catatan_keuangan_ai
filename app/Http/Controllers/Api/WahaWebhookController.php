@@ -252,7 +252,7 @@ class WahaWebhookController extends Controller
             - Format WhatsApp-friendly (bold, bullet point, per baris singkat)
             - Tone disesuaikan (surplus = apresiasi, defisit = suportif)
 
-            ### Format output(kamu hanya perlu mengeluarkan format ini):
+            ### Format output(kamu hanya perlu mengeluarkan format ini tidak perlu tambahan kata-kata lain):
             📊 Laporan Keuangan Harian
             🗓️ $startDate
 
